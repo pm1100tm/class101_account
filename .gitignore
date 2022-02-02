@@ -301,7 +301,7 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
-# Windows shortcuts
+# Windows shortcut
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,visualstudiocode,pycharm+all,python
@@ -309,3 +309,4 @@ $RECYCLE.BIN/
 # user defined
 my_test.py
 prj_settings.py
+migrations
