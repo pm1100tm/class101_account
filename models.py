@@ -1,41 +1,20 @@
-from django.db import models
-
-
-# class CertificationType(models.Model):
-#     pass
-#
-#
-# class PermissionType(models.Model):
-#     pass
-#
-#
-# class UserPermissionType(models.Model):
-#     pass
+from django.db     import models
+from account.const import UserConst
 
 
 class AccountTypes(models.Model):
-    AC_TYPE = [
-        (1, 'Admin'),
-        (2, 'Creator'),
-        (3, 'Consumer'),
-    ]
-    id   = models.PositiveSmallIntegerField(primary_key=True, choices=AC_TYPE)
-    name = models.CharField(max_length=10)
-
+    id         = models.PositiveSmallIntegerField(primary_key=True, choices=UserConst.ACCOUNT_TYPE)
+    name       = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now=True, verbose_name='생성일')
+    
     class Meta:
         db_table = 'account_types'
 
 
 class SocialSignUpType(models.Model):
-    SOCIAL_SIGNUP_TYPE = [
-        (1, 'Kakao'),
-        (2, 'Naver'),
-        (3, 'Facebook'),
-        (4, 'Google'),
-        (5, 'Apple'),
-    ]
-    id   = models.PositiveSmallIntegerField(primary_key=True, choices=SOCIAL_SIGNUP_TYPE)
-    name = models.CharField(max_length=50)
+    id         = models.PositiveSmallIntegerField(primary_key=True, choices=UserConst.SOCIAL_SIGNUP_TYPE)
+    name       = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now=True, verbose_name='생성일')
     
     class Meta:
         db_table = 'social_signup_types'
@@ -48,16 +27,20 @@ class User(models.Model):
     is_deleted         = models.BooleanField(default=False)
     created_at         = models.DateTimeField(auto_now=True, verbose_name='생성일')
     updated_at         = models.DateTimeField(auto_now_add=True, verbose_name='수정일')
+    account_type       = models.ForeignKey('account.AccountTypes', on_delete=models.CASCADE, related_name='user')
     social_signup_type = models.ForeignKey('account.SocialSignUpType', null=True, on_delete=models.CASCADE, related_name='user')
-    user_account_type  = models.ForeignKey('account.AccountTypes', on_delete=models.CASCADE, related_name='user')
-
+    
     class Meta:
         db_table = 'users'
 
 
 # class Consumer(models.Model):
 #     pass
-#
-#
 # class Creator(models.Model):
+#     pass
+# class CertificationType(models.Model):
+#     pass
+# class PermissionType(models.Model):
+#     pass
+# class UserPermissionType(models.Model):
 #     pass
