@@ -1,28 +1,30 @@
-<account> : <subject>
+<>:
+
 -
 
 
-######## Maximum length of content is 72 ########### -> |
-# <account> branch-name : <title>
-# - description 1
+######## Git Commit Convention ########### -> |
+# <type>: title (제목)
 
-# issue track number (#number)
+# -desc (본문, 생략 가능)
+# resolves, issue, ... (해결한 이슈, 생략 가능)
+# issue track number (#number) ((해결한 이슈, 생략 가능)
+# etc (그 외, 생략 가능)
+
+# 제목은 간단하게
+# 제목과 본문을 빈 행으로 구분
+# 제목에 명령문 사용, 마침표 X, 과거형 X
+# 주로 [무엇을, 왜] 를 설명, 어떻게는 필요할 때 작성
+
 # --- COMMIT END ---
-# <branch-name> Title
-#   feature : New feature
-#   fix     : Fix bug
-#   refactor: Refactor code
-#   style   : Change style of code(white space, semicolon etc)
-#   test    : Add/Change/Delete test case
-#   docs    : Add/Change/Delete document
-#   build   : Change in build script
-#   ci      : Change in ci script
-#   chore   : etc
-# ------------------
-#   Don't Capitalize the subject line
-#   Use imperitive mood in subject
-#   Do not use period at the end of subject
-#   Seperate subject and content with a blank line
-#   Use the body explain "what" and "why" vs "how"
-#   Use "-" when content contains multiline
+# type
+#   FEATURE  : New feature
+#   FIX      : Fix bug
+#   REFACTOR : Refactor code
+#   STYLE    : Change style of code(white space, semicolon etc)
+#   TEST     : Add/Change/Delete test case
+#   DOCS     : Add/Change/Delete document
+#   BUILD    : 빌드 스크립트 수정
+#   CI       : ci 스크립트 수정
+#   CHORE    : 패키지 매니저 수정 (ex .gitignore, requirements )
 # ------------------
