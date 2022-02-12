@@ -187,6 +187,8 @@ class UserViewSet(viewsets.ModelViewSet):
             if data['password'] != user_obj.password:
                 raise PasswordNotCorrectException
             
+            self.user_query.increase_login_count(user=user_obj)
+            
             serializer = UserInfoSerializer(user_obj)
             result     = CommonUtil.return_data(msg=ResponseMsgConst.SUCCESS,
                                                 data=serializer.data)

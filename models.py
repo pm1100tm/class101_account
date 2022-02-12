@@ -24,7 +24,7 @@ class User(models.Model):
     id                 = models.BigAutoField(primary_key=True)
     email              = models.EmailField(max_length=30, unique=True, verbose_name='이메일')
     password           = models.CharField(max_length=80, null=True, verbose_name='비밀번호')
-    # login_count        = models.IntegerField(default=0)
+    login_count        = models.IntegerField(default=0)
     # last_login_date    = models.CharField(max_length=19)
     is_deleted         = models.BooleanField(default=False)
     created_at         = models.DateTimeField(auto_now=True, verbose_name='생성일')

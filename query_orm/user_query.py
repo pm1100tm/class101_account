@@ -15,3 +15,7 @@ class UserDatabaseQuery:
     def check_user_alive(self, email: str=None) -> bool:
         user = User.objects.filter(is_deleted=False, email=email)
         return user.exists()
+
+    def increase_login_count(self, user: User) -> None:
+        user.login_count += 1
+        user.save()
