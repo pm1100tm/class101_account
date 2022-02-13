@@ -13,8 +13,8 @@ from rest_framework.serializers                 import ValidationError
 from account.serializers.user_serializers       import *
 from account.enums                              import SocialSignUpTypeEnum, AccountTypeEnum
 from account.query_orm.user_query               import UserDatabaseQuery
-from common.const                               import AppNameConst, MethodNameConst, ResponseMsgConst
-from common.utils                               import CommonUtil
+from common.const                               import AppNameConst, MethodNameConst, ResponseMsgConst, ResponseErrMsgConst
+from common.utils                               import CommonUtil, TimeUtils
 from common.exceptions                          import (
     KakaoCallbackError,
     NotNullException,
@@ -97,7 +97,7 @@ class UserViewSet(viewsets.ModelViewSet):
             
         except KeyError:
             traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseMsgConst.KEY_ERROR)
+            result = CommonUtil.return_data(msg=ResponseErrMsgConst.KEY_ERROR)
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
         except KakaoCallbackError as e:
@@ -135,7 +135,7 @@ class UserViewSet(viewsets.ModelViewSet):
             
         except KeyError:
             traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseMsgConst.KEY_ERROR)
+            result = CommonUtil.return_data(msg=ResponseErrMsgConst.KEY_ERROR)
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
@@ -156,9 +156,10 @@ class UserViewSet(viewsets.ModelViewSet):
         CommonUtil.print_log(app_name=AppNameConst.ACCOUNT, method_name=MethodNameConst.SIGN_IN, request_data=request.data, class_=self)
         
         # Todo list
-        # 1. JWT or DRF AuthToken
-        # 2. add login count, last login time column
-        # 3. insert consumer model with transaction atomic
+        # 1. Sendgrid email 인증 비동기
+        # 2. 보인인증 모듈
+        # 3. JWT or DRF AuthToken
+        # 4. insert consumer model with transaction atomic
         
         try:
             # 입력 값 편집
@@ -187,14 +188,17 @@ class UserViewSet(viewsets.ModelViewSet):
             if data['password'] != user_obj.password:
                 raise PasswordNotCorrectException
             
-            self.user_query.increase_login_count(user=user_obj)
+            self.user_query.increase_login_count(user=user_obj, present_time=TimeUtils.get_datetime_today())
             
             serializer = UserInfoSerializer(user_obj)
             result     = CommonUtil.return_data(msg=ResponseMsgConst.SUCCESS,
                                                 data=serializer.data)
             
             return Response(result, status=status.HTTP_200_OK)
-            
+        
+        except KeyError as e:
+            return Response(ResponseErrMsgConst.KEY_ERROR, status=status.HTTP_400_BAD_REQUEST)
+        
         except UserNotExistsException as e:
             result = CommonUtil.return_data(msg=str(e))
             return Response(result, status=status.HTTP_409_CONFLICT)
@@ -218,7 +222,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 'email'             : request.data['email'].strip(),
                 'password'          : request.data.get('password').strip() if request.data.get('password') else None,
                 'social_signup_type': int(request.data['social_signup_type']),
-                'account_type'      : AccountTypeEnum.CONSUMER.value # 고정 값
+                'account_type'      : AccountTypeEnum.CONSUMER.value, # 고정 값
+                'login_count'       : 1 # 고정
             }
             
             # 상관관계 유효성 체크
@@ -249,7 +254,7 @@ class UserViewSet(viewsets.ModelViewSet):
             
         except KeyError:
             traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseMsgConst.KEY_ERROR)
+            result = CommonUtil.return_data(msg=ResponseErrMsgConst.KEY_ERROR)
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
             
         except UserExistsException as e:
@@ -259,9 +264,10 @@ class UserViewSet(viewsets.ModelViewSet):
         except UserDeletedException as e:
             result = CommonUtil.return_data(msg=str(e))
             return Response(result, status=status.HTTP_204_NO_CONTENT)
-        
+            
         except DatabaseError:
-            result = CommonUtil.return_data(msg=ResponseMsgConst.KEY_ERROR)
+            traceback.print_exc()
+            result = CommonUtil.return_data(msg=ResponseErrMsgConst.DATABASE_OPERATION_ERROR)
             return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def retrieve(self, request, *args, **kwargs):
@@ -275,7 +281,7 @@ class UserViewSet(viewsets.ModelViewSet):
             
         except (AttributeError, ValueError):
             traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseMsgConst.ATTRIBUTE_VALUE_ERROR)
+            result = CommonUtil.return_data(msg=ResponseErrMsgConst.ATTRIBUTE_VALUE_ERROR)
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
     
     def list(self, request, *args, **kwargs):

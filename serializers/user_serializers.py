@@ -52,6 +52,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
             'id',
             'email',
             'is_deleted',
+            'login_count',
             
             # define
             'user_account_type_name',
