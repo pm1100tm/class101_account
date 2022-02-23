@@ -1,9 +1,6 @@
 import traceback
-import requests
 
-from django.conf                                import settings
 from django.db                                  import transaction, DatabaseError
-from django.shortcuts                           import redirect
 
 from rest_framework                             import viewsets, status
 from rest_framework.response                    import Response
@@ -16,7 +13,6 @@ from account.query_orm.user_query               import UserDatabaseQuery
 from common.const                               import AppNameConst, MethodNameConst, ResponseMsgConst, ResponseErrMsgConst
 from common.utils                               import CommonUtil, TimeUtils
 from common.exceptions                          import (
-    KakaoCallbackError,
     NotNullException,
     UserExistsException,
     UserNotExistsException,
@@ -32,117 +28,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = User.objects.filter(is_deleted=False)
         return queryset
-    
-    @action(detail=False, methods=['get'], url_path='sign-up/kakao')
-    def signup_kakao(self, request):
-        """ 카카오 인가 코드 취득
-        """
-        CommonUtil.print_log(app_name=AppNameConst.ACCOUNT, method_name=MethodNameConst.SIGN_UP_KAKAO, request_param=request.query_params, class_=self)
-        HOST         = settings.KAKAO_HOST
-        CLIENT_ID    = settings.KAKAO_REST_API_KEY
-        REDIRECT_URI = settings.KAKAO_SIGNUP_REDIRECT_URI
-        
-        try:
-            redirect_url = f'{HOST}/oauth/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code'
-            return redirect(redirect_url)
-        
-        except Exception as e:
-            print(str(e))
-            traceback.print_exc()
-            # Todo Error Page URL
-            return redirect('')
-    
-    @action(detail=False, methods=['get'], url_path='sign-up/kakao-callback')
-    def signup_kakao_callback(self, request):
-        """ 카카오 콜백. 엑세스 토큰 및 리프레쉬 토큰 받아 리턴
-            Response Success Example
-            {
-                'token_type'              : '',
-                'access_token'            : '',
-                'expires_in'              : '',
-                'refresh_token'           : '',
-                'refresh_token_expires_in': '',
-                'scope'                   : ''
-            }
-
-            Response Fail Example
-            {
-                'error'            : 'invalid_grant',
-                'error_description': 'authorization code not found for code=RjIT4...',
-                'error_code'       : 'KOE320'
-            }
-        """
-        CommonUtil.print_log(app_name=AppNameConst.ACCOUNT, method_name=MethodNameConst.SIGN_UP_KAKAO_CALLBACK, request_param=request.query_params, class_=self)
-        return_data  = dict()
-        HOST         = settings.KAKAO_HOST
-        CLIENT_ID    = settings.KAKAO_REST_API_KEY
-        REDIRECT_URI = settings.KAKAO_SIGNUP_REDIRECT_URI
-        
-        try:
-            code = request.query_params['code']
-            
-            request_url = f'{HOST}/oauth/token?grant_type=authorization_code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&code={code}'
-            result = requests.get(request_url).json()
-            
-            error = result.get('error')
-            if error:
-                raise KakaoCallbackError
-            
-            return_data['access_token'] = result['access_token']
-            
-            result = CommonUtil.return_data(msg=ResponseMsgConst.SUCCESS,
-                                            data=return_data)
-            
-            return Response(result, status=status.HTTP_200_OK)
-            
-        except KeyError:
-            traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseErrMsgConst.KEY_ERROR)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        except KakaoCallbackError as e:
-            result = CommonUtil.return_data(msg=str(e))
-            return Response(result, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        except Exception as e:
-            print(str(e))
-            traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseMsgConst.FAIL)
-            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    @action(detail=False, methods=['post'], url_path='sign-up/kakao-profile')
-    def signup_kakao_get_profile(self, request):
-        """ 카카오 프로필 정보 취득. 이메일 정보 취득 후 리턴하여 회원가입 또는 로그인 진행
-        """
-        CommonUtil.print_log(app_name=AppNameConst.ACCOUNT, method_name=MethodNameConst.SIGN_UP_KAKAO_GET_PROFILE, request_data=request.data, class_=self)
-        return_data = dict()
-        
-        try:
-            access_token = request.data['access_token']
-            url = 'https://kapi.kakao.com/v2/user/me'
-            headers = {
-                'Authorization': f"Bearer {access_token}",
-                'Content-Type' : 'application/x-www-form-urlencoded;charset=utf-8'
-            }
-            profile_info = requests.get(url, headers=headers).json()
-            
-            return_data['email'] = profile_info['kakao_account']['email']
-            
-            result = CommonUtil.return_data(msg=ResponseMsgConst.SUCCESS,
-                                            data=return_data)
-            
-            return Response(result, status=status.HTTP_200_OK)
-            
-        except KeyError:
-            traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseErrMsgConst.KEY_ERROR)
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-            
-        except Exception as e:
-            print(str(e))
-            traceback.print_exc()
-            result = CommonUtil.return_data(msg=ResponseMsgConst.FAIL)
-            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'], url_path='sign-in')
     def sign_in(self, request):
