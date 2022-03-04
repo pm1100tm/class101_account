@@ -11,7 +11,8 @@ from account.serializers.user_serializers       import *
 from account.enums                              import SocialSignUpTypeEnum, AccountTypeEnum
 from account.query_orm.user_query               import UserDatabaseQuery
 from common.const                               import AppNameConst, MethodNameConst, ResponseMsgConst, ResponseErrMsgConst
-from common.utils                               import CommonUtil, TimeUtils
+from common.util_common                         import CommonUtil
+from common.util_date                           import TimeUtils
 from common.exceptions                          import (
     NotNullException,
     UserExistsException,
@@ -73,7 +74,7 @@ class UserViewSet(viewsets.ModelViewSet):
             if data['password'] != user_obj.password:
                 raise PasswordNotCorrectException
             
-            self.user_query.increase_login_count(user=user_obj, present_time=TimeUtils.get_datetime_today())
+            self.user_query.increase_login_count(user=user_obj, present_time=TimeUtils.get_today())
             
             serializer = UserInfoSerializer(user_obj)
             result     = CommonUtil.return_data(msg=ResponseMsgConst.SUCCESS,
@@ -188,4 +189,3 @@ class UserViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         CommonUtil.print_log(app_name=AppNameConst.ACCOUNT, method_name=MethodNameConst.UPDATE, request_data=request.data, class_=self)
         pass
-
