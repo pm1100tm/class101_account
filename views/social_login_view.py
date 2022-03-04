@@ -8,8 +8,8 @@ from rest_framework.response    import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators  import api_view, permission_classes
 
-from common.const               import ResponseMsgConst, ResponseErrMsgConst
-from common.utils               import CommonUtil
+from common.const               import ResponseMsgConst, ResponseErrMsgConst, CommonConst
+from common.util_common         import CommonUtil
 from common.exceptions          import (
     RequestsError
 )
@@ -129,7 +129,7 @@ def kakao_profile(request):
         
         headers = {
             'Authorization': f"Bearer {access_token}",
-            'Content-Type' : 'application/x-www-form-urlencoded;charset=utf-8'
+            'Content-Type' : CommonConst.CONTENT_TYPE_X_WWW
         }
         
         profile_info = requests.get(url, headers=headers).json()
